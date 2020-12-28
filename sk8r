@@ -8,6 +8,7 @@ const fs = require('fs');
 const config_dir = require('os').homedir() + '/.sk8r/';
 const commands_prefix = "/"
 const userlist = []
+const debug = false
 
 /* INIT */
 
@@ -217,8 +218,6 @@ function start_hue_socket () {
 				password: options.password
 			}
 		);
-
-		console.info(`I've connected you to ${options.room} as ${options.email}.`);
 	})
 
 	hue_socket.on("update", function (obj) {
@@ -228,7 +227,9 @@ function start_hue_socket () {
 		if (hue_socket_events[type]) {
 			hue_socket_events[type](data)
 		} else {
-			console.log(obj)
+			if (debug) {
+				console.log(obj)
+			}
 		}
 	})
 }
