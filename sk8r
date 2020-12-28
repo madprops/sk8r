@@ -8,8 +8,8 @@ const fs = require('fs')
 const path = require('path')
 const config_dir = require('os').homedir() + '/.sk8r/'
 const commands_prefix = "/"
-const userlist = []
 const debug = false
+let userlist = []
 
 /* INIT */
 
@@ -211,6 +211,8 @@ const hue_socket_events = {
 	},
 	joined: data => {
 		show_log(data.log_messages)
+
+		userlist = []
 
 		for (let user of data.userlist) {
 			userlist.push(user.username)
