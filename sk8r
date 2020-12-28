@@ -5,6 +5,7 @@ const open = require('open')
 const io = require('socket.io-client')
 const readline = require('readline')
 const fs = require('fs')
+const path = require('path')
 const config_dir = require('os').homedir() + '/.sk8r/'
 const commands_prefix = "/"
 const userlist = []
@@ -36,10 +37,13 @@ USAGE: sk8r [options | --help]
 		All options except 'config' itself can be set from FILE.
 		Command line arguments overwrite options specified in FILE.
 		The default value is ~/.sk8r/config.json.
-	--tv=FILE
-		New TV urls are written to FILE.
-	--img=FILE
-		New image urls are written to FILE.`)
+	--open_media=(true, false)
+		If true, then it will open image and tv sources
+		using the system's default program for each type
+	--img_file=FILE
+		New image urls are written to FILE.
+	--tv_file=FILE
+		New TV urls are written to FILE.`)
 	process.exit(0)
 }
 
@@ -52,8 +56,9 @@ function get_options () {
 		'email': 'thioslip@trashmail.ws',
 		'password': 'guest',
 		'room': 'main',
-		'img': '/dev/null',
-		'tv': '/dev/null',
+		'open_media': true,
+		'img_file': '',
+		'tv_file': '',
 	}
 
 	let command_line_options = require('minimist')(process.argv.slice(2))
@@ -135,12 +140,39 @@ function txt (message, date) {
 	console.log(`${nice_date(date)} ${message}`)
 }
 
+function write_to_file (file, line) {
+	try {
+		if (!fs.existsSync(file)) {
+			fs.mkdirSync(path.dirname(file), { recursive: true });
+			fs.writeFileSync(file, "")
+		}
+	
+		fs.appendFile(file,
+			line + '\n',
+			x => x ? console : undefined)
+	} catch (err) {
+		console.error(err)
+	}
+}
+
 function img (source) {
-	open(source)
+	if (options.open_media) {
+		open(source)
+	}
+
+	if (options.img_file) {
+		write_to_file(options.img_file, source)
+	}
 }
 
 function tv (source) {
-	open(source)
+	if (options.open_media) {
+		open(source)
+	}
+	
+	if (options.tv_file) {
+		write_to_file(options.tv_file, source)
+	}
 }
 
 /* HUE PART */
