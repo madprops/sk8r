@@ -1,11 +1,11 @@
 #! /usr/bin/env node
 
-'use strict';
-
-const io = require('socket.io-client');
-const readline = require('readline');
-const fs = require('fs');
-const config_dir = require('os').homedir() + '/.sk8r/';
+'use strict'
+const open = require('open')
+const io = require('socket.io-client')
+const readline = require('readline')
+const fs = require('fs')
+const config_dir = require('os').homedir() + '/.sk8r/'
 const commands_prefix = "/"
 const userlist = []
 const debug = false
@@ -14,7 +14,7 @@ const debug = false
 
 // Start the connection process
 let hue_socket
-let options = get_options();
+let options = get_options()
 if (options.help) {
 	console.info(`
 USAGE: sk8r [options | --help]
@@ -39,8 +39,8 @@ USAGE: sk8r [options | --help]
 	--tv=FILE
 		New TV urls are written to FILE.
 	--img=FILE
-		New image urls are written to FILE.`);
-	process.exit(0);
+		New image urls are written to FILE.`)
+	process.exit(0)
 }
 
 /* CONFIGURATION */
@@ -54,9 +54,9 @@ function get_options () {
 		'room': 'main',
 		'img': '/dev/null',
 		'tv': '/dev/null',
-	};
+	}
 
-	let command_line_options = require('minimist')(process.argv.slice(2));
+	let command_line_options = require('minimist')(process.argv.slice(2))
 	let config_path = ({
 		...defaults,
 		...command_line_options
@@ -78,7 +78,7 @@ function get_options () {
 		}
 	}
 
-	return options;
+	return options
 }
 
 function nice_date (date = false) {
@@ -106,9 +106,9 @@ function start_commandline () {
 		input: process.stdin,
 		output: null,
 		terminal: false,
-	});
+	})
 
-	input.on('close', e => process.exit(0));
+	input.on('close', e => process.exit(0))
 
 	input.on('line', function (message) {
 		if (is_command(message)) {
@@ -129,15 +129,6 @@ function start_commandline () {
 	})
 }
 
-// OUTPUT
-function write_to_file (file) {
-	return line => fs.appendFile(
-		file,
-		line + '\n',
-		x => x ? console.warn(x) : undefined
-	);
-}
-
 // Actions for chat, image, and tv
 
 function txt (message, date) {
@@ -145,11 +136,11 @@ function txt (message, date) {
 }
 
 function img (source) {
-	write_to_file(options.img)
+	open(source)
 }
 
 function tv (source) {
-	write_to_file(options.tv)
+	open(source)
 }
 
 /* HUE PART */
@@ -172,13 +163,13 @@ const hue_socket_events = {
 		txt(`The topic is now "${data.topic}".`),
 
 	user_join: data => {
-		txt(`${data.username} joined.`);
+		txt(`${data.username} joined.`)
 		if (!userlist.includes(data.username)) {
 			userlist.push(data.username)
 		}
 	},
 	user_disconnect: data => {
-		txt(`${data.username} left.`);
+		txt(`${data.username} left.`)
 		for (let i=0; i<userlist.length; i++) {
 			if (userlist[i] === data.username) {
 				userlist.splice(i, 1)
@@ -187,20 +178,20 @@ const hue_socket_events = {
 		}
 	},
 	joined: data => {
-		show_log(data.log_messages);
+		show_log(data.log_messages)
 
 		for (let user of data.userlist) {
 			userlist.push(user.username)
 		}
 
-		show_users();
+		show_users()
 	}
 }
 
 // Centralized function to send emits to the Hue server
 function hue_socket_emit(method, data) {
-	data.server_method_name = method;
-	hue_socket.emit('server_method', data);
+	data.server_method_name = method
+	hue_socket.emit('server_method', data)
 }
 
 // Starts the Hue socket
@@ -208,7 +199,7 @@ function start_hue_socket () {
 	hue_socket = io(options.server, {
 			reconnection: true
 		}
-	);
+	)
 
 	hue_socket.on("connect", function (obj) {
 		hue_socket_emit('join_room', {
@@ -217,7 +208,7 @@ function start_hue_socket () {
 				email: options.email,
 				password: options.password
 			}
-		);
+		)
 	})
 
 	hue_socket.on("update", function (obj) {
@@ -235,26 +226,26 @@ function start_hue_socket () {
 }
 
 function show_message (data) {
-	let link_title = data.link_title ? ` (${data.link_title})` : '';
-	let edited = data.just_edited ? ` (edited)` : '';
-	txt(`${data.username}: ${data.message + link_title + edited}`, data.date);
+	let link_title = data.link_title ? ` (${data.link_title})` : ''
+	let edited = data.just_edited ? ` (edited)` : ''
+	txt(`${data.username}: ${data.message + link_title + edited}`, data.date)
 }
 
 function announce_image (data) {
-	let source = (data.source.startsWith('/') ? options.server : '') + data.source;
-	txt(`${data.setter} changed the image to ${source}.`, data.date);
+	let source = (data.source.startsWith('/') ? options.server : '') + data.source
+	txt(`${data.setter} changed the image to ${source}.`, data.date)
 
 	if (data.comment) {
-		txt(`${data.setter}: ${data.comment}`, data.date);
+		txt(`${data.setter}: ${data.comment}`, data.date)
 	}
 }
 
 function announce_tv (data) {
-	let title = data.title ? ` (${data.title})` : '';
+	let title = data.title ? ` (${data.title})` : ''
 	txt(`${data.setter} changed the TV to ${title} (${data.source}).`, data.date)
 
 	if (data.comment) {
-		txt(`${data.setter}: ${data.comment}`, data.date);
+		txt(`${data.setter}: ${data.comment}`, data.date)
 	}
 }
 
