@@ -17,300 +17,298 @@ let userlist = []
 let hue_socket
 let options = get_options()
 if (options.help) {
-	console.info(`
+  console.info(`
 USAGE: sk8r [options | --help]
-	--help show this help
-	--server=ADDRESS
-		ADDRESS is the Hue server URL
-		The default is https://hue.merkoba.com
-	--email=EMAIL
-		EMAIL is to connect to Hue.
-		The default is thioslip@trashmail.ws.
-	--password=PASSWORD
-		PASSWORD is used to connect to Hue.
-		The default is "guest".
-	--room=ROOM_ID
-		The user will be logged into the room on Hue with id ROOM_ID.
-		The default is "main".
-	--config=FILE
-		Options are read from FILE, which must be a JSON file.
-		All options except 'config' itself can be set from FILE.
-		Command line arguments overwrite options specified in FILE.
-		The default value is ~/.sk8r/config.json.
-	--open_media=(true, false)
-		If true, then it will open image and tv sources
-		using the system's default program for each type.
-		The default value is true.
-	--img_file=FILE
-		New image urls are written to FILE.
-	--tv_file=FILE
-		New TV urls are written to FILE.`)
-	process.exit(0)
+  --help show this help
+  --server=ADDRESS
+    ADDRESS is the Hue server URL
+    The default is https://hue.merkoba.com
+  --email=EMAIL
+    EMAIL is to connect to Hue.
+    The default is thioslip@trashmail.ws.
+  --password=PASSWORD
+    PASSWORD is used to connect to Hue.
+    The default is "guest".
+  --room=ROOM_ID
+    The user will be logged into the room on Hue with id ROOM_ID.
+    The default is "main".
+  --config=FILE
+    Options are read from FILE, which must be a JSON file.
+    All options except 'config' itself can be set from FILE.
+    Command line arguments overwrite options specified in FILE.
+    The default value is ~/.sk8r/config.json.
+  --open_media=(true, false)
+    If true, then it will open image and tv sources
+    using the system's default program for each type.
+    The default value is true.
+  --img_file=FILE
+    New image urls are written to FILE.
+  --tv_file=FILE
+    New TV urls are written to FILE.`)
+  process.exit(0)
 }
 
 /* CONFIGURATION */
 
 function get_options () {
-	let defaults = {
-		'config': config_dir + 'config.json',
-		'server': 'https://hue.merkoba.com',
-		'email': 'thioslip@trashmail.ws',
-		'password': 'guest',
-		'room': 'main',
-		'open_media': true,
-		'img_file': '',
-		'tv_file': '',
-	}
+  let defaults = {
+    'config': config_dir + 'config.json',
+    'server': 'https://hue.merkoba.com',
+    'email': 'thioslip@trashmail.ws',
+    'password': 'guest',
+    'room': 'main',
+    'open_media': true,
+    'img_file': '',
+    'tv_file': '',
+  }
 
-	let command_line_options = require('minimist')(process.argv.slice(2))
-	let config_path = ({
-		...defaults,
-		...command_line_options
-	})['config']
-	let options
+  let command_line_options = require('minimist')(process.argv.slice(2))
+  let config_path = ({
+    ...defaults,
+    ...command_line_options
+  })['config']
+  let options
 
-	// If config file exists then use it to populate options
-	// Else just use defaults and arguments
-	if (fs.existsSync(config_path)) {
-		options = {
-			...defaults,
-			...JSON.parse(fs.readFileSync(config_path, 'utf8')),
-			...command_line_options,
-		}
-	} else {
-		options = {
-			...defaults,
-			...command_line_options,
-		}
-	}
+  // If config file exists then use it to populate options
+  // Else just use defaults and arguments
+  if (fs.existsSync(config_path)) {
+    options = {
+      ...defaults,
+      ...JSON.parse(fs.readFileSync(config_path, 'utf8')),
+      ...command_line_options,
+    }
+  } else {
+    options = {
+      ...defaults,
+      ...command_line_options,
+    }
+  }
 
-	return options
+  return options
 }
 
 function nice_date (date = false) {
-	let d = date ? new Date(date) : new Date()
-	return d.toISOString().replace(/[A-Z]/g,' ').split(".").slice(0, -1).join(".")
+  let d = date ? new Date(date) : new Date()
+  return d.toISOString().replace(/[A-Z]/g,' ').split(".").slice(0, -1).join(".")
 }
 
 // Checks whether some string is a command
 function is_command (message) {
-	if (
-		message.length >= 2 &&
-		message[0] === commands_prefix &&
-		message[1] !== commands_prefix &&
-		message[1] !== " "
-	) {
-		return true
-	}
+  if (
+    message.length >= 2 &&
+    message[0] === commands_prefix &&
+    message[1] !== commands_prefix &&
+    message[1] !== " "
+  ) {
+    return true
+  }
 
-	return false
+  return false
 }
 
 // INPUT
 function start_commandline () {
-	let input = readline.createInterface({
-		input: process.stdin,
-		output: null,
-		terminal: false,
-	})
+  let input = readline.createInterface({
+    input: process.stdin,
+    output: null,
+    terminal: false,
+  })
 
-	input.on('close', e => process.exit(0))
+  input.on('close', e => process.exit(0))
 
-	input.on('line', function (message) {
-		if (is_command(message)) {
-			let split = message.split(" ")
-			let cmd = split[0].replace(commands_prefix, "")
-			let arg = split.slice(1).join(" ")
+  input.on('line', function (message) {
+    if (is_command(message)) {
+      let split = message.split(" ")
+      let cmd = split[0].replace(commands_prefix, "")
+      let arg = split.slice(1).join(" ")
 
-			if (cmd === "image") {
-				hue_socket_emit("change_image_source", {src:arg})
-			} else if (cmd === "tv") {
-				hue_socket_emit("change_tv_source", {src:arg})
-			} else if (cmd === "users") {
-				show_users()
-			}
-		} else {
-			hue_socket_emit("sendchat", {message:message})
-		}
-	})
+      if (cmd === "image") {
+        hue_socket_emit("change_image_source", {src:arg})
+      } else if (cmd === "tv") {
+        hue_socket_emit("change_tv_source", {src:arg})
+      } else if (cmd === "users") {
+        show_users()
+      }
+    } else {
+      hue_socket_emit("sendchat", {message:message})
+    }
+  })
 }
 
 // Actions for chat, image, and tv
 
 function txt (message, date) {
-	console.log(`${nice_date(date)} ${message}`)
+  console.log(`${nice_date(date)} ${message}`)
 }
 
 function write_to_file (file, line) {
-	try {
-		if (!fs.existsSync(file)) {
-			fs.mkdirSync(path.dirname(file), { recursive: true });
-			fs.writeFileSync(file, "")
-		}
-	
-		fs.appendFile(file,
-			line + '\n',
-			x => x ? console : undefined)
-	} catch (err) {
-		console.error(err)
-	}
+  try {
+    if (!fs.existsSync(file)) {
+      fs.mkdirSync(path.dirname(file), { recursive: true });
+      fs.writeFileSync(file, "")
+    }
+  
+    fs.appendFile(file,
+      line + '\n',
+      x => x ? console : undefined)
+  } catch (err) {
+    console.error(err)
+  }
 }
 
 function img (source) {
-	if (options.open_media) {
-		open(source)
-	}
+  if (options.open_media) {
+    open(source)
+  }
 
-	if (options.img_file) {
-		write_to_file(options.img_file, source)
-	}
+  if (options.img_file) {
+    write_to_file(options.img_file, source)
+  }
 }
 
 function tv (source) {
-	if (options.open_media) {
-		open(source)
-	}
-	
-	if (options.tv_file) {
-		write_to_file(options.tv_file, source)
-	}
+  if (options.open_media) {
+    open(source)
+  }
+  
+  if (options.tv_file) {
+    write_to_file(options.tv_file, source)
+  }
 }
 
 /* HUE PART */
 
 const hue_socket_events = {
-	chat_message: data => {
-		if (data.username !== options.username) {
-			show_message(data)
-		}
-	},
-	changed_image_source: data => {
-		announce_image(data, img)
-		img(data.source)
-	},
-	changed_tv_source: data => {
-		announce_tv(data, tv)
-		tv(data.source)
-	},
-	topic_change: data =>
-		txt(`The topic is now "${data.topic}".`),
+  chat_message: data => {
+    if (data.username !== options.username) {
+      show_message(data)
+    }
+  },
+  changed_image_source: data => {
+    announce_image(data, img)
+    img(data.source)
+  },
+  changed_tv_source: data => {
+    announce_tv(data, tv)
+    tv(data.source)
+  },
+  topic_change: data =>
+    txt(`The topic is now "${data.topic}".`),
 
-	user_join: data => {
-		txt(`${data.username} joined.`)
-		if (!userlist.includes(data.username)) {
-			userlist.push(data.username)
-		}
-	},
-	user_disconnect: data => {
-		txt(`${data.username} left.`)
-		for (let i=0; i<userlist.length; i++) {
-			if (userlist[i] === data.username) {
-				userlist.splice(i, 1)
-				break
-			}
-		}
-	},
-	joined: data => {
-		show_log(data.log_messages)
+  user_join: data => {
+    txt(`${data.username} joined.`)
+    if (!userlist.includes(data.username)) {
+      userlist.push(data.username)
+    }
+  },
+  user_disconnect: data => {
+    txt(`${data.username} left.`)
+    for (let i=0; i<userlist.length; i++) {
+      if (userlist[i] === data.username) {
+        userlist.splice(i, 1)
+        break
+      }
+    }
+  },
+  joined: data => {
+    show_log(data.log_messages)
 
-		userlist = []
+    userlist = []
 
-		for (let user of data.userlist) {
-			userlist.push(user.username)
-		}
+    for (let user of data.userlist) {
+      userlist.push(user.username)
+    }
 
-		show_users()
-	}
+    show_users()
+  }
 }
 
 // Centralized function to send emits to the Hue server
 function hue_socket_emit(method, data) {
-	data.server_method_name = method
-	hue_socket.emit('server_method', data)
+  data.server_method_name = method
+  hue_socket.emit('server_method', data)
 }
 
 // Starts the Hue socket
 function start_hue_socket () {
-	hue_socket = io(options.server, {
-			reconnection: true
-		}
-	)
+  hue_socket = io(options.server, {
+      reconnection: true
+    }
+  )
 
-	hue_socket.on("connect", function (obj) {
-		hue_socket_emit('join_room', {
-				alternative: true,
-				room_id: options.room,
-				email: options.email,
-				password: options.password
-			}
-		)
-	})
+  hue_socket.on("connect", function (obj) {
+    hue_socket_emit('join_room', {
+        alternative: true,
+        room_id: options.room,
+        email: options.email,
+        password: options.password
+      }
+    )
+  })
 
-	hue_socket.on("update", function (obj) {
-		let type = obj.type
-		let data = obj.data
+  hue_socket.on("update", function (obj) {
+    let type = obj.type
+    let data = obj.data
 
-		if (hue_socket_events[type]) {
-			hue_socket_events[type](data)
-		} else {
-			if (debug) {
-				console.log(obj)
-			}
-		}
-	})
+    if (hue_socket_events[type]) {
+      hue_socket_events[type](data)
+    } else if (debug) {
+    	console.log(obj)
+    }
+  })
 }
 
 function show_message (data) {
-	let link_title = data.link_title ? ` (${data.link_title})` : ''
-	let edited = data.just_edited ? ` (edited)` : ''
-	txt(`${data.username}: ${data.message + link_title + edited}`, data.date)
+  let link_title = data.link_title ? ` (${data.link_title})` : ''
+  let edited = data.just_edited ? ` (edited)` : ''
+  txt(`${data.username}: ${data.message + link_title + edited}`, data.date)
 }
 
 function announce_image (data) {
-	let source = (data.source.startsWith('/') ? options.server : '') + data.source
-	txt(`${data.setter} changed the image to ${source}.`, data.date)
+  let source = (data.source.startsWith('/') ? options.server : '') + data.source
+  txt(`${data.setter} changed the image to ${source}.`, data.date)
 
-	if (data.comment) {
-		txt(`${data.setter}: ${data.comment}`, data.date)
-	}
+  if (data.comment) {
+    txt(`${data.setter}: ${data.comment}`, data.date)
+  }
 }
 
 function announce_tv (data) {
-	let title = data.title ? ` (${data.title})` : ''
-	txt(`${data.setter} changed the TV to ${title} (${data.source}).`, data.date)
+  let title = data.title ? ` (${data.title})` : ''
+  txt(`${data.setter} changed the TV to ${title} (${data.source}).`, data.date)
 
-	if (data.comment) {
-		txt(`${data.setter}: ${data.comment}`, data.date)
-	}
+  if (data.comment) {
+    txt(`${data.setter}: ${data.comment}`, data.date)
+  }
 }
 
 function show_log (messages) {
-	console.log("--- Start of Past Messages ---")
+  console.log("--- Start of Past Messages ---")
 
-	for (let m of messages) {
-		let data = Object.assign(m.data, {})
-		if (m.type === "chat") {
-			data.message = m.data.content
-			data.date = m.date
-			show_message(data)
-		} else if (m.type === "image") {
-			announce_image(data)
-		} else if (m.type === "tv") {
-			announce_tv(data)
-		}
-	}
+  for (let m of messages) {
+    let data = Object.assign(m.data, {})
+    if (m.type === "chat") {
+      data.message = m.data.content
+      data.date = m.date
+      show_message(data)
+    } else if (m.type === "image") {
+      announce_image(data)
+    } else if (m.type === "tv") {
+      announce_tv(data)
+    }
+  }
 
-	console.log("--- End of Past Messages ---")
+  console.log("--- End of Past Messages ---")
 }
 
 function show_users () {
-	let s = "< Users Online: "
+  let s = "< Users Online: "
 
-	for (let username of userlist) {
-		s += username + " "
-	}
+  for (let username of userlist) {
+    s += username + " "
+  }
 
-	console.log("\n" + s.trim() + " >\n")
+  console.log("\n" + s.trim() + " >\n")
 }
 
 // Main
