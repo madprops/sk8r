@@ -39,7 +39,8 @@ USAGE: sk8r [options | --help]
 		The default value is ~/.sk8r/config.json.
 	--open_media=(true, false)
 		If true, then it will open image and tv sources
-		using the system's default program for each type
+		using the system's default program for each type.
+		The default value is true.
 	--img_file=FILE
 		New image urls are written to FILE.
 	--tv_file=FILE
