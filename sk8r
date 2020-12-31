@@ -23,10 +23,8 @@ USAGE: sk8r [options | --help]
     The default is https://hue.merkoba.com
   --email=EMAIL
     EMAIL is to connect to Hue.
-    The default is thioslip@trashmail.ws.
   --password=PASSWORD
     PASSWORD is used to connect to Hue.
-    The default is "guest".
   --room=ROOM_ID
     The user will be logged into the room on Hue with id ROOM_ID.
     The default is "main".
@@ -49,9 +47,9 @@ USAGE: sk8r [options | --help]
 function get_options () {
   let defaults = {
     'config': config_dir + 'config.json',
-    'server': 'https://hue.merkoba.com',
-    'email': 'thioslip@trashmail.ws',
-    'password': 'guest',
+    'server': 'localhost',
+    'email': 'oo@oo',
+    'password': 'ooo',
     'room': 'main',
     'open_media': true,
     'img_file': '',
