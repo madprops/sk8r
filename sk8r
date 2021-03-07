@@ -172,24 +172,23 @@ const hue_socket_events = {
       show_message(data)
     }
   },
-  changed_image_source: data => {
+  image_source_changed: data => {
     announce_image(data, img)
     img(data.source)
   },
-  changed_tv_source: data => {
+  tv_source_changed: data => {
     announce_tv(data, tv)
     tv(data.source)
   },
-  topic_change: data =>
+  topic_changed: data =>
     txt(`The topic is now "${data.topic}".`),
-
-  user_join: data => {
+  user_joined: data => {
     txt(`${data.username} joined.`)
     if (!userlist.includes(data.username)) {
       userlist.push(data.username)
     }
   },
-  user_disconnect: data => {
+  user_disconnected: data => {
     txt(`${data.username} left.`)
     for (let i=0; i<userlist.length; i++) {
       if (userlist[i] === data.username) {
